@@ -2,7 +2,7 @@
 
 """
 
-import Constants.Unlocalized as const
+from Constants import Unlocalized as const
 
 
 def make_coffee(coffeemaker=None, *args, **kwargs):
@@ -12,7 +12,7 @@ def make_coffee(coffeemaker=None, *args, **kwargs):
     """
     
     if not coffeemaker or coffeemaker is NotImplemented:
-        from models.example import GenericCoffeemaker
+        from models.generic import GenericCoffeemaker
         coffeemaker = GenericCoffeemaker()
         
     coffee = coffeemaker.brew()

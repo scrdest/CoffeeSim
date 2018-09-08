@@ -15,6 +15,8 @@ class Unlocalized(object):
     WATER_FREEZE_PT = 0
     WATER_EVAPORATE_PT = 100
     
+    VOLUME = 'volume'
+    
     # Temperature descriptions:
     WARMTH_FROZEN = "frozen"
     WARMTH_ICY = "ice-cold"
@@ -43,6 +45,10 @@ class Unlocalized(object):
     COMP_HEATER = 'Heating Element'
     COMP_FILTER = 'Filter'
     COMP_GROUNDSBIN = 'Grounds Disposal'
+    
+    # Raw materials:
+    MAT_GROUNDS = 'coffee grounds'
+    MAT_BEANS = 'coffee beans'
     
 class PolishLocalization(Unlocalized):
     # just as a proof of concept:
