@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """DDD."""
 
+import copy
+
 from Constants import Unlocalized as const
+
+from helpers import make_sounds
+
 
 class Tank(object):
     """A generic water tank."""
@@ -10,7 +15,6 @@ class Tank(object):
     def __init__(self, contents=None, *args, **kwargs):
         self.contents = set()
         after_fill = self.fill(container=self.contents, fill_contents=contents)
-        print(after_fill)
         self.contents.update(after_fill)
     
     @staticmethod
@@ -33,18 +37,32 @@ class Tank(object):
         
     def remove(self, container=None, remove_volume=0, *args, **kwargs):
         emptied_container = self.contents if container is None else container.copy()
+        removed_contents = set()
         to_remove = remove_volume
         
         while to_remove and emptied_container:
             pool_count = len(emptied_container)
             content = emptied_container.pop()
             
-            removed = min(content.volume, to_remove / float(pool_count)) # float() for backwards compatibility
-            to_remove -= removed
-            content.volume -= removed
+            amt_removed = min(content.volume, to_remove / float(pool_count)) # float() for backwards compatibility
             
-            if content.volume > 0: emptied_container.update([content])
+            removed = copy.deepcopy(content)
             
-        return emptied_container
+            make_sounds("GLUG-GLUG-GLUG...")
+            content.volume = content.volume - amt_removed
+            removed.volume = amt_removed
+            
+            to_remove -= amt_removed
+            
+            if content.volume > 0: emptied_container.update([content]) # put the remainder back in
+            if removed.volume > 0: removed_contents.update([removed])
+        
+        else:
+            if to_remove: raise RuntimeWarning("Amount to remove ({amt}) exceeded available amount by {rem}."
+                                               .format(amt=remove_volume, rem=to_remove)
+                                               )
+            
+        return emptied_container, removed_contents
+        
             
     

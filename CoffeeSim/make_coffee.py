@@ -16,12 +16,24 @@ def make_coffee(coffeemaker=None, *args, **kwargs):
         coffeemaker = GenericCoffeemaker()
         
     coffee = coffeemaker.brew()
+    print("\n~~ {coffee} ~~".format(coffee=coffee))
     
     return coffee
         
 
-def main():
-    return make_coffee()
+def main(*args, **kwargs):
+    return serve_CLI(*args, **kwargs)
     
+def serve_CLI(*args, **kwargs):
+    import argparse
     
-if __name__ == '__main__': main()
+    arg_parser = argparse.ArgumentParser(description=const.LOC_PROGRAM_DESC)
+    #arg_parser.add_argument()
+    
+    parsed_args = vars(arg_parser.parse_args())
+    
+    make_coffee(**parsed_args)
+    
+if __name__ == '__main__': 
+    main()
+    

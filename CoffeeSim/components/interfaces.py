@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""DDD."""
+"""Physical interface elements - buttons, LEDs, etc."""
 
 from Constants import Unlocalized as const
 

@@ -4,6 +4,8 @@
 from Constants import Unlocalized as const
 
 class CaffeineSource(object):
+    extract_efficiency = 10
+    
     def __init__(self, amount=1, caffeine_density=1, *args, **kwargs):
         if amount < 0: raise ValueError(
             "Amount should be a positive value! Value received: {val}.".format(val=amount)
@@ -12,16 +14,27 @@ class CaffeineSource(object):
         self.amount = amount
         self.caffeine_density = caffeine_density
         
-    def extract(self, extract_efficiency=99, *args, **kwargs):
+    def extract(self, extract_efficiency=NotImplemented, *args, **kwargs):
         """Handles caffeine extraction.
         
-        :param extract_efficiency: optional; how much of the total caffeine is extracted.
+        :param extract_efficiency: optional override; how much of the total caffeine is extracted.
         """
+        extract_efficiency = self.extract_efficiency if extract_efficiency is NotImplemented else extract_efficiency
+        
         curr_caffeine = self.amount * self.caffeine_density
         extracted_caffeine = curr_caffeine * 0.01 * extract_efficiency
         curr_caffeine -= extracted_caffeine
+        
         self.caffeine_density = curr_caffeine / self.amount
+        
         return extracted_caffeine
+        
+    def __str__(self): return ("{name} (Amount: {amt}) <Caffeine: {caf} units>"
+                                .format(
+                                        name=type(self).__name__, 
+                                        amt=self.amount,
+                                        caf=self.caffeine_density * self.amount,
+                                        ))
     
     
 class CoffeeBeans(CaffeineSource):
@@ -53,12 +66,15 @@ class CoffeeBeans(CaffeineSource):
         
         
 class CoffeeGrounds(CoffeeBeans):
-    """Like coffee beans, except ground."""
-    pass
+    """Like coffee beans, except ground. 
+    
+    The increased contact surface enables more caffeine to be extracted.
+    """
+    extract_efficiency = 90
     
         
 class Liquid(object):
-    display_name = "Liquid"
+    display_name = const.LOC_LIQUID
 
     freezing_point = const.WATER_FREEZE_PT
     evaporation_point = const.WATER_EVAPORATE_PT
@@ -76,7 +92,7 @@ class Liquid(object):
         )
         
         if temperature > self.evaporation_point or temperature < self.freezing_point: raise RuntimeWarning(
-            "Warning: the material would not be liquid at the provided temperature. Value received: {val}.".format(val=volume)
+            "The material would not be liquid at the provided temperature. Value received: {val} {unit}.".format(val=temperature, unit=const.TEMP_UNIT)
         )
         
         self.volume = volume
@@ -88,8 +104,20 @@ class Liquid(object):
         descriptors = set()
         
         warmth = self.temperature
-        warmth_desc = const.WARMTH_WARM if self.temperature >= const.ROOMTEMP else const.WARMTH_COLD # stub!
-        descriptors |= [warmth_desc]
+        warmth_desc = const.WARMTH_FROZEN
+        temp_thresholds = [
+                    (self.freezing_point, const.WARMTH_ICY), 
+                    (((const.ROOMTEMP - self.freezing_point) / 2), const.WARMTH_COLD), 
+                    ((const.ROOMTEMP - 5), const.WARMTH_MED), 
+                    ((const.ROOMTEMP + 15), const.WARMTH_WARM), 
+                    (((self.evaporation_point - const.ROOMTEMP) / 2), const.WARMTH_HOT), 
+                    (self.evaporation_point, const.WARMTH_BOILING)
+                    ]
+        
+        for threshold in temp_thresholds:
+            if self.temperature > threshold[0]: warmth_desc = threshold[1]
+            
+        descriptors |= {warmth_desc}
         
         self.descriptors = descriptors # only update the whole description all at once, to ensure data integrity
         return descriptors
@@ -97,20 +125,20 @@ class Liquid(object):
     def __str__(self): 
         self.update_state()
         return "{desc}{name} ({volume}{unit})".format(
-                                                    desc=self.descriptors, 
+                                                    desc=(", ".join(sorted(self.descriptors)) + (" " if self.descriptors else "")), 
                                                     name=self.display_name, 
                                                     volume=self.volume, 
                                                     unit='mL'
                                             )
     
 class Water(Liquid):
-    display_name = "Water"
+    display_name = const.LOC_WATER
     
 class Coffee(Liquid):
-    display_name = "Coffee"
+    display_name = const.LOC_COFFEE
     
     def __init__(self, volume=const.DEFAULT_VOLUME, temperature=const.ROOMTEMP, caffeine_content=0, *args, **kwargs):
-        super(Coffee, self).__init__(self, volume=volume, temperature=temperature, *args, **kwargs)
+        super(Coffee, self).__init__(volume=volume, temperature=temperature, *args, **kwargs)
         self.caffeine_content = max(0, caffeine_content)
         
     def update_state(self):
@@ -119,7 +147,7 @@ class Coffee(Liquid):
         strength = self.caffeine_content
         strength_desc = const.STRENGTH_DECAF if self.caffeine_content <= 5 else const.STRENGTH_MEDIUM # stub!
         
-        descriptors |= strength_desc
+        descriptors |= {strength_desc}
         
         self.descriptors = descriptors
         return descriptors

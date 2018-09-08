@@ -7,6 +7,8 @@ from components import water_supply, bean_supply, grinders, heaters
 
 import comestibles
 
+from helpers import make_sounds
+
 class AbstractCoffeemaker(object):
     """An abstract base for all Coffeemakers; as such, it only defines the API and is *NOT* suitable for direct use.
     If you need a non-specific *functional* model, see the GenericCoffeemaker subclass.
@@ -35,11 +37,12 @@ class AbstractCoffeemaker(object):
         water = self.get_water(volume=coffee_volume, **kwargs)
         grounds = self.get_grounds(strength=strength, **kwargs)
         
-        extract = self.extract_coffee(grounds=grounds, medium=water, **kwargs)
+        print(f"Mats: {water}, {grounds}.")
+        extract = self.get_extract(grounds=grounds, medium=water, **kwargs)
         
-        self.grounds_dispose(grounds, **kwargs)
+        #self.grounds_dispose(grounds, **kwargs)
         
-        coffee = self.handle_extras(extract=extract, **kwargs)
+        coffee = self.get_extras(brew=extract, **kwargs)
         
         return coffee
         
@@ -53,6 +56,7 @@ class AbstractCoffeemaker(object):
         if not sources: raise RuntimeError("No water sources available!")
         sources = {src: src.contents_volume for src in sources}
         
+        water_found = set()
         obtained_vol, needed_vol = 0, volume
         
         available_vol = sum(( contents for contents in sources.values() ))
@@ -60,11 +64,54 @@ class AbstractCoffeemaker(object):
         
         while obtained_vol < needed_vol:
             water_sources = self.pick_water_sources(sources=sources, needed_amt=needed_vol, **kwargs)
-            print(water_sources)
+            
             for (curr_src, curr_vol) in water_sources.items():
-                curr_src.contents, obtained_vol = ( curr_src.remove(remove_volume=curr_vol) ), (obtained_vol + curr_vol) 
+                curr_src.contents, transferred = curr_src.remove(remove_volume=curr_vol)
+                water_found |= transferred
+                
+                obtained_vol = sum((liquid.volume for liquid in water_found))
                 # a bit ugly to use tuple unpacking here, but it should enforce the synchronization of transfer on both ends.
                 if obtained_vol >= needed_vol: break # shouldn't really be necessary, but there's no harm in being a bit paranoid.
+                
+        water_pool = comestibles.Water(volume=obtained_vol) # to simplify things for now - merge the water pool instances.
+        return water_pool
+        
+    def get_grounds(self, *args, **kwargs):
+        """Handles the provision of coffee grounds for the extraction process. """
+        raise NotImplementedError
+        
+    def get_extract(self, grounds=None, medium=None, *args, **kwargs):
+        """Handles the process of brewing a basic coffee bean extract - i.e. plain black coffee.
+        
+        :param grounds: brewable caffeine source
+        :param medium: heatable liquid
+        """
+        if not (grounds and medium): return medium
+        
+        heater = self.pick_heater(heaters=self.installed_components.get(const.COMP_HEATER))
+        to_heat = [medium]
+        heated = heater.heat(items=to_heat, target_temp=0.8*(const.WATER_EVAPORATE_PT-const.WATER_FREEZE_PT))
+        heated = heated[medium]
+        
+        caffeine = grounds.extract() if grounds else NotImplemented
+        
+        brew = (heated if caffeine is NotImplemented 
+                       else comestibles.Coffee(
+                                               volume=heated.volume, 
+                                               temperature=heated.temperature, 
+                                               caffeine_content=caffeine,
+                                               **kwargs)
+                )
+        return brew
+        
+    def get_extras(self, brew, *args, **kwargs):
+        """Handles anything added to the coffee *in the brewing process*,
+        e.g. (steamed) milk for white coffees, crema, etc.
+        
+        :param brew: basic extract to which extras are being added.
+        """
+        coffee = brew
+        return coffee
         
     def pick_water_sources(self, sources, needed_amt, *args, **kwargs):
         """Handles selecting how much water to retrieve and from which source.
@@ -82,21 +129,23 @@ class AbstractCoffeemaker(object):
             remaining_amt -= used_vol
             solution[src] = used_vol        
         return solution
+        
+    def pick_grinder(self, grinders, *args, **kwargs):
+        """Handles selecting which grinder to use - and reconfiguring it if needed.
+        
+        :param grinders: grinders to choose from; Iterable.
+        :returns: a selected grinder.
+        """
+        return next(iter(grinders)) if grinders else None # simple stub
+        
+    def pick_heater(self, heaters, *args, **kwargs):
+        """Handles selecting which heater to use - and reconfiguring it if needed.
+        
+        :param heaters: heaters to choose from; Iterable.
+        :returns: a selected heater.
+        """
+        return next(iter(heaters)) if heaters else None # simple stub
     
-    def get_grounds(self, *args, **kwargs):
-        """Handles the provision of coffee grounds for the extraction process. """
-        raise NotImplementedError
-        
-    def extract(grounds=None, water=None, *args, **kwargs):
-        if not grounds and water: return water
-        
-        caffeine = grounds.extract()
-        brew = comestibles.Coffee(
-                                  volume=water.volume, 
-                                  temperature=0.8*(const.WATER_EVAPORATE_PT-const.WATER_FREEZE_PT), 
-                                  caffeine_content=caffeine,
-                                  )
-        
     
 class GenericCoffeemaker(AbstractCoffeemaker):
     """An example using a non-specific, off-brand, made-up coffeemaker model 
@@ -116,10 +165,16 @@ class GenericCoffeemaker(AbstractCoffeemaker):
     def get_grounds(self, *args, **kwargs):
         sources = self.installed_components.get(const.COMP_BEANS)
         grinders = self.installed_components.get(const.COMP_GRINDER)
+        
         if not sources: raise RuntimeError("Coffee bin not found!")
         if not grinders: raise RuntimeError("No operational bean grinder found!")
+        
         beans = comestibles.CoffeeBeans(amount=100)
-        grounds = beans.grind(amount=100) # TODO move this operation into the grinder's grind method
+        
+        grind_result = self.pick_grinder(grinders=grinders).grind(items={beans: beans.amount})
+        
+        grounds = grind_result.get(beans, {}).get(const.MAT_GROUNDS)
+        
         return grounds
         
     

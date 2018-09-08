@@ -29,7 +29,7 @@ class Unlocalized(object):
     # Strength:
     STRENGTH_DECAF = 'decaf'
     STRENGTH_LOW = 'mild' # because 'weak' is a negatively charged phrasing. Marketing, yay!
-    STRENGTH_MEDIUM = 'medium'
+    STRENGTH_MEDIUM = 'medium-strength'
     STRENGTH_HIGH = 'strong'
     
     # Brew types:
@@ -49,6 +49,13 @@ class Unlocalized(object):
     # Raw materials:
     MAT_GROUNDS = 'coffee grounds'
     MAT_BEANS = 'coffee beans'
+    
+    # Localizations:
+    LOC_LIQUID = 'liquid'
+    LOC_WATER = 'water'
+    LOC_COFFEE = 'coffee'
+    
+    LOC_PROGRAM_DESC = "Make some coffee!"
     
 class PolishLocalization(Unlocalized):
     # just as a proof of concept:
