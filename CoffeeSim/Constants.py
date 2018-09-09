@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """String constants module. Fairly self-explanatory."""
 
+DEFAULT_VOLUME = 100
+USE_SOUND_EFFECTS = True
+
 class Unlocalized(object):
     """Holds generic/shared/still-not-localized constants.
     Subclasses provide localization.
     """
     
-    DEFAULT_VOLUME = 100
     
     # Physics:
     TEMP_UNIT = 'Celsius'

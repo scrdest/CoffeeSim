@@ -3,9 +3,10 @@
 
 import copy
 
-from Constants import Unlocalized as const
+import CoffeeSim.Constants as Constants
+const = Constants.Unlocalized
 
-from helpers import make_sounds
+from CoffeeSim.helpers import make_sounds
 
 
 class Tank(object):
@@ -25,17 +26,22 @@ class Tank(object):
     def contents_volume(self, *args, **kwargs):
         return self.get_volume(container=self.contents)
         
-    def fill(self, container=None, fill_contents=None, *args, **kwargs):
-        filled_container = self.contents if container is None else container.copy()
+    def fill(self, fill_contents=None, container=None, *args, **kwargs):
+        """Adds specified contents to the target container, respecting tank capacity. 
+        
+        :param container: optional; a Set-like, holding tank contents
+        :param fill_contents: optional; a Mapping of types to volumes
+        """
+        filled_container = self.contents if container is None else (container or set()).copy()
     
         for cont, vol in (fill_contents or {}).items():
-            if vol > (self.capacity - self.contents_volume): raise RuntimeWarning("Contents volume exceeds capacity!")
+            if vol > (self.capacity - self.get_volume(filled_container)): raise RuntimeWarning("Contents volume exceeds capacity!")
             # in the future, could possibly fill to capacity and discard the rest; sticking to YAGNI for now.
-            container.update({cont(volume=vol, **kwargs)})
+            filled_container.update({cont(volume=vol, **kwargs)})
         
-        return container
+        return filled_container
         
-    def remove(self, container=None, remove_volume=0, *args, **kwargs):
+    def remove(self, remove_volume=0, container=None, *args, **kwargs):
         emptied_container = self.contents if container is None else container.copy()
         removed_contents = set()
         to_remove = remove_volume

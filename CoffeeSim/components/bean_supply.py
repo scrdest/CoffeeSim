@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """DDD."""
 
-from Constants import Unlocalized as const
+import CoffeeSim.Constants as Constants
+const = Constants.Unlocalized
 
 class Container(object):
     def __init__(self, *args, **kwargs):

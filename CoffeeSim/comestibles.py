@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Holds definitions of unprocessed materials and the delicious brews made with them."""
 
-from Constants import Unlocalized as const
+import CoffeeSim.Constants as Constants
+const = Constants.Unlocalized
 
 class CaffeineSource(object):
     extract_efficiency = 10
@@ -82,7 +83,7 @@ class Liquid(object):
     @property
     def description(self): return ("{} ".format(" ".join(map(str, sorted(self.descriptors))))) if self.descriptors else ""
     
-    def __init__(self, volume=const.DEFAULT_VOLUME, temperature=const.ROOMTEMP, *args, **kwargs):
+    def __init__(self, volume=Constants.DEFAULT_VOLUME, temperature=const.ROOMTEMP, *args, **kwargs):
         if volume <= 0: raise ValueError(
             "Liquids must have a positive, nonzero volume! Value received: {val}.".format(val=volume)
         )
@@ -137,7 +138,7 @@ class Water(Liquid):
 class Coffee(Liquid):
     display_name = const.LOC_COFFEE
     
-    def __init__(self, volume=const.DEFAULT_VOLUME, temperature=const.ROOMTEMP, caffeine_content=0, *args, **kwargs):
+    def __init__(self, volume=Constants.DEFAULT_VOLUME, temperature=const.ROOMTEMP, caffeine_content=0, *args, **kwargs):
         super(Coffee, self).__init__(volume=volume, temperature=temperature, *args, **kwargs)
         self.caffeine_content = max(0, caffeine_content)
         
@@ -145,7 +146,16 @@ class Coffee(Liquid):
         descriptors = super(Coffee, self).update_state()
         
         strength = self.caffeine_content
-        strength_desc = const.STRENGTH_DECAF if self.caffeine_content <= 5 else const.STRENGTH_MEDIUM # stub!
+        strength_desc = const.STRENGTH_DECAF
+        
+        strength_thresholds = [
+                              (5, const.STRENGTH_LOW), 
+                              (50, const.STRENGTH_MEDIUM), 
+                              (150, const.STRENGTH_HIGH),
+                              ]
+        
+        for threshold in strength_thresholds:
+            if strength > threshold[0]: strength_desc = threshold[1]
         
         descriptors |= {strength_desc}
         

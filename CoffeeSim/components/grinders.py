@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """DDD."""
 
-from Constants import Unlocalized as const
+import CoffeeSim.Constants as Constants
+const = Constants.Unlocalized
 
-from helpers import make_sounds
+from CoffeeSim.helpers import make_sounds
 
 class Grinder(object):
     def __init__(self, *args, **kwargs):

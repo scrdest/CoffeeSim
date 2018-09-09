@@ -2,8 +2,8 @@
 
 """
 
-from Constants import Unlocalized as const
-
+import CoffeeSim.Constants as Constants
+const = Constants.Unlocalized
 
 def make_coffee(coffeemaker=None, *args, **kwargs):
     """Abstract, high-level coffeemaking interface.
@@ -12,7 +12,7 @@ def make_coffee(coffeemaker=None, *args, **kwargs):
     """
     
     if not coffeemaker or coffeemaker is NotImplemented:
-        from models.generic import GenericCoffeemaker
+        from CoffeeSim.models.generic import GenericCoffeemaker
         coffeemaker = GenericCoffeemaker()
         
     coffee = coffeemaker.brew()
