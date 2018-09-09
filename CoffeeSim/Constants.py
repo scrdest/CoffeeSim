@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """String constants module. Fairly self-explanatory."""
 
-DEFAULT_VOLUME = 100
+DEFAULT_VOLUME = 100 # Physical volume, not sound volume!
 USE_SOUND_EFFECTS = True
 
 class Unlocalized(object):
@@ -18,6 +18,7 @@ class Unlocalized(object):
     WATER_EVAPORATE_PT = 100
     
     VOLUME = 'volume'
+    VOLUME_UNIT = 'mL'
     
     # Temperature descriptions:
     WARMTH_FROZEN = "frozen"
@@ -34,11 +35,22 @@ class Unlocalized(object):
     STRENGTH_MEDIUM = 'medium-strength'
     STRENGTH_HIGH = 'strong'
     
+    # Pressure:
+    PRESSURE_LOW = 'low'
+    PRESSURE_MEDIUM = 'medium'
+    PRESSURE_HIGH = 'high'
+    
     # Brew types:
+    BREWTYPE_GENERIC = 'Coffee'
     BREWTYPE_ESPRESSO = 'Espresso'
     BREWTYPE_AMERICANO = 'Americano'
     BREWTYPE_CREMA = 'Caffe Crema'
     BREWTYPE_CAPPUCINO = 'Cappucino'
+    
+    # Extras keys:
+    EXTRA_CREMA = 'crema'
+    EXTRA_MILK = 'milk'
+    EXTRA_MILKFOAM = 'steamed milk'
     
     # Component slots:
     COMP_WATER = 'Water Source'
@@ -57,7 +69,7 @@ class Unlocalized(object):
     LOC_WATER = 'water'
     LOC_COFFEE = 'coffee'
     
-    LOC_PROGRAM_DESC = "Make some coffee!"
+    LOC_PROGRAM_DESC = """Welcome to CoffeeSim! Let's make some coffee!"""
     
 class PolishLocalization(Unlocalized):
     # just as a proof of concept:

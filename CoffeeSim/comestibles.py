@@ -129,7 +129,7 @@ class Liquid(object):
                                                     desc=(", ".join(sorted(self.descriptors)) + (" " if self.descriptors else "")), 
                                                     name=self.display_name, 
                                                     volume=self.volume, 
-                                                    unit='mL'
+                                                    unit=const.VOLUME_UNIT,
                                             )
     
 class Water(Liquid):
@@ -138,9 +138,18 @@ class Water(Liquid):
 class Coffee(Liquid):
     display_name = const.LOC_COFFEE
     
-    def __init__(self, volume=Constants.DEFAULT_VOLUME, temperature=const.ROOMTEMP, caffeine_content=0, *args, **kwargs):
+    def __init__(self, 
+                 volume=Constants.DEFAULT_VOLUME, 
+                 temperature=const.ROOMTEMP, 
+                 caffeine_content=0, 
+                 name_override=NotImplemented, 
+                 extras=None,
+                 *args, **kwargs):
+                
         super(Coffee, self).__init__(volume=volume, temperature=temperature, *args, **kwargs)
         self.caffeine_content = max(0, caffeine_content)
+        if name_override is not NotImplemented: self.display_name = name_override
+        self.extras = extras or []
         
     def update_state(self):
         descriptors = super(Coffee, self).update_state()
@@ -159,7 +168,13 @@ class Coffee(Liquid):
         
         descriptors |= {strength_desc}
         
-        self.descriptors = descriptors
-        return descriptors
+    def __str__(self):
+        base_representation = super(Coffee, self).__str__()
+        extras_desc = []
+        if self.extras: extras_desc = [str(extra) for extra in self.extras]
+        
+        extras_desc = " with {}".format(", ".join(extras_desc)) if extras_desc else ""
+        
+        return base_representation + extras_desc
         
     

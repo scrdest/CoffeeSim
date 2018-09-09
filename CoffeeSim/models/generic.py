@@ -6,6 +6,8 @@ const = Constants.Unlocalized
 
 from CoffeeSim.components import water_supply, bean_supply, grinders, heaters, interfaces
 
+from CoffeeSim.presets import generic as presets
+
 import CoffeeSim.comestibles as comestibles
 
 from CoffeeSim.helpers import make_sounds
@@ -28,6 +30,8 @@ class AbstractCoffeemaker(object):
     
     installed_components = {comptype: None for comptype in component_slots}
     
+    extra_handlers = dict()
+    
     def __init__(self, *args, **kwargs): raise NotImplementedError
 
     def brew(self, preset=None, coffee_volume=None, *args, **kwargs):
@@ -39,16 +43,20 @@ class AbstractCoffeemaker(object):
         """
         if not self.powered: return None
         coffee_volume = coffee_volume or (preset.volume if preset else None) or Constants.DEFAULT_VOLUME
+        
         strength = preset.strength if preset else const.STRENGTH_MEDIUM
+        pressure = preset.pressure if preset else const.PRESSURE_MEDIUM
+        brewname = preset.output_name if preset else const.BREWTYPE_GENERIC
+        extras = preset.extras if preset else None
         
         water = self.get_water(volume=coffee_volume, **kwargs)
         grounds = self.get_grounds(strength=strength, **kwargs)
         
-        extract, spent_grounds = self.get_extract(grounds=grounds, medium=water, **kwargs)
+        extract, spent_grounds = self.get_extract(grounds=grounds, medium=water, brew_name=brewname, **kwargs)
         
         self.grounds_dispose(grounds=spent_grounds, **kwargs)
         
-        coffee = self.get_extras(brew=extract, **kwargs)
+        coffee = self.get_extras(brew=extract, extras=extras, **kwargs)
         
         return coffee
         
@@ -84,8 +92,14 @@ class AbstractCoffeemaker(object):
         water_pool = comestibles.Water(volume=obtained_vol) # to simplify things for now - merge the water pool instances.
         return water_pool
         
-    def get_grounds(self, *args, **kwargs):
+    def get_grounds(self, strength=None, *args, **kwargs):
         """Handles the provision of coffee grounds for the extraction process. """
+        strength2amt = {
+            const.STRENGTH_LOW: 35,
+            const.STRENGTH_MEDIUM: 100,
+            const.STRENGTH_HIGH: 200,
+        }
+        amt = strength2amt.get(strength, 100)
         
         sources = self.installed_components.get(const.COMP_BEANS)
         grinders = self.installed_components.get(const.COMP_GRINDER)
@@ -93,7 +107,7 @@ class AbstractCoffeemaker(object):
         if not sources: raise RuntimeError("Coffee bin not found!")
         if not grinders: raise RuntimeError("No operational bean grinder found!")
         
-        beans = self.pick_bean_sources(sources=sources, needed_amt=100)
+        beans = self.pick_bean_sources(sources=sources, needed_amt=amt)
         
         grind_result = self.pick_grinder(grinders=grinders).grind(items={beans: beans.amount})
         
@@ -101,7 +115,7 @@ class AbstractCoffeemaker(object):
         
         return grounds
         
-    def get_extract(self, grounds=None, medium=None, *args, **kwargs):
+    def get_extract(self, grounds=None, medium=None, brew_name=None, *args, **kwargs):
         """Handles the process of brewing a basic coffee bean extract - i.e. plain black coffee.
         
         :param grounds: brewable caffeine source
@@ -121,18 +135,27 @@ class AbstractCoffeemaker(object):
                                                volume=heated.volume, 
                                                temperature=heated.temperature, 
                                                caffeine_content=caffeine,
+                                               name_override=brew_name,
                                                **kwargs)
                 )
         return brew, grounds
         
-    def get_extras(self, brew, *args, **kwargs):
+    def get_extras(self, brew, extras=None, *args, **kwargs):
         """Handles anything added to the coffee *in the brewing process*,
         e.g. (steamed) milk for white coffees, crema, etc.
         
         :param brew: basic extract to which extras are being added.
         """
         if not self.powered: return brew
+        applied_extras = extras or []
+        do_nothing = lambda x: x
         coffee = brew # just to make it explicit a transformation into the final product has occured.
+        for extra in applied_extras:
+            extra_handler = self.extra_handlers.get(extra, NotImplemented)
+            if extra_handler is NotImplemented:
+                print("WARNING: '{}' extra not supported on the current machine, skipping!".format(extra))
+                extra_handler = do_nothing
+            coffee = extra_handler(coffee)
         return coffee 
         
     def pick_water_sources(self, sources, needed_amt, *args, **kwargs):
@@ -216,6 +239,29 @@ class GenericCoffeemaker(AbstractCoffeemaker):
         self.power_button = interfaces.PowerButton(owner=self, **kwargs)
         if turned_on: self.power_button.press()
         
-        self.coffee_button = interfaces.CoffeeButton(owner=self, **kwargs)
+        self.coffee_buttons = (
+                                interfaces.CoffeeButton(owner=self, preset=presets.Americano, **kwargs),
+                                interfaces.CoffeeButton(owner=self, preset=presets.Crema, **kwargs),
+                                interfaces.CoffeeButton(owner=self, preset=presets.Espresso, **kwargs),
+                                interfaces.CoffeeButton(owner=self, preset=presets.Cappucino, **kwargs),
+        )
+        
+        self.extra_handlers.update({
+            const.EXTRA_CREMA: self.add_crema,
+            const.EXTRA_MILKFOAM: self.add_foam,
+        })
+        
+    def add_crema(self, brew, *args, **kwargs):
+        enh_brew = brew
+        enh_brew.extras.append("crema")
+        return enh_brew
+        
+    def add_foam(self, brew, foam_vol=70, *args, **kwargs):
+        enh_brew = brew
+        enh_brew.volume += foam_vol
+        enh_brew.extras.append("{vol}{unit} of {name}".format(vol=foam_vol, unit=const.VOLUME_UNIT, name=const.EXTRA_MILKFOAM))
+        return enh_brew
     
 Coffeemaker = GenericCoffeemaker # alias
+
+    
