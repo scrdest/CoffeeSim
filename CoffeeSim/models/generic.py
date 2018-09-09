@@ -54,9 +54,9 @@ class AbstractCoffeemaker(object):
         
         extract, spent_grounds = self.get_extract(grounds=grounds, medium=water, brew_name=brewname, **kwargs)
         
-        self.grounds_dispose(grounds=spent_grounds, **kwargs)
+        self.dispose_grounds(grounds=spent_grounds, **kwargs)
         
-        coffee = self.get_extras(brew=extract, extras=extras, **kwargs)
+        coffee = self.handle_extras(brew=extract, extras=extras, **kwargs)
         
         return coffee
         
@@ -140,7 +140,7 @@ class AbstractCoffeemaker(object):
                 )
         return brew, grounds
         
-    def get_extras(self, brew, extras=None, *args, **kwargs):
+    def handle_extras(self, brew, extras=None, *args, **kwargs):
         """Handles anything added to the coffee *in the brewing process*,
         e.g. (steamed) milk for white coffees, crema, etc.
         
@@ -210,7 +210,7 @@ class AbstractCoffeemaker(object):
         """
         return next(iter(heaters)) if heaters else None # simple stub
         
-    def grounds_dispose(self, grounds, *args, **kwargs):
+    def dispose_grounds(self, grounds, *args, **kwargs):
         if not self.powered: return grounds
         return None # magically evaporates the grounds
     

@@ -57,8 +57,6 @@ class HeaterTest(unittest.TestCase):
         self.assertFalse(empty_run)
         print("\nHeater behavior as expected...")
         
-    
-    
         
         
 def main(): return unittest.main()
