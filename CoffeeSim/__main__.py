@@ -1,2 +1,2 @@
-from make_coffee import serve_CLI
+from CoffeeSim.make_coffee import serve_CLI
 serve_CLI()
