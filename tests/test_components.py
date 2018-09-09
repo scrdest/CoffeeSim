@@ -6,7 +6,7 @@ from CoffeeSim.components import water_supply, bean_supply, grinders, heaters, i
 
 from CoffeeSim import comestibles
 
-def handle_IO(*args, **kwargs): print(*args, **kwargs)
+def handle_IO(*args): print(", ".join(map(str, args)))
 
 
 class WaterSupplyTest(unittest.TestCase):

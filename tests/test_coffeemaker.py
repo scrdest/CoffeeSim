@@ -6,7 +6,7 @@ from CoffeeSim.make_coffee import make_coffee
 
 from CoffeeSim.models import generic
 
-def handle_IO(*args, **kwargs): print(*args, **kwargs)
+def handle_IO(*args): print(", ".join(map(str, args)))
 
 class AbstractBrewingInterfaceTest(unittest.TestCase):
     """Tests whether the generic, model-agnostic brewing API produces coffee for a specified model."""

@@ -2,6 +2,14 @@ CoffeeSim
 ===========
 A grossly OOP simulation of a coffee machine.
 
+Requirements:
+-----------
+
+- Python (tested on CPython: 2.7, 3.5.3, 3.7)
+- That's it!
+
+________
+
 Quickstart:
 -----------
 
