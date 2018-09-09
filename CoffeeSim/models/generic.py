@@ -93,7 +93,7 @@ class AbstractCoffeemaker(object):
         if not sources: raise RuntimeError("Coffee bin not found!")
         if not grinders: raise RuntimeError("No operational bean grinder found!")
         
-        beans = comestibles.CoffeeBeans(amount=100)
+        beans = self.pick_bean_sources(sources=sources, needed_amt=100)
         
         grind_result = self.pick_grinder(grinders=grinders).grind(items={beans: beans.amount})
         
@@ -160,14 +160,16 @@ class AbstractCoffeemaker(object):
         :returns: a dict of sources used and the amount of beans to obtain from each source.
         """
         remaining_amt = needed_amt
+        sources = {src: float('inf') for src in sources} # magic!
         solution = {}
         # very simple algorithm: greedily exhaust each source in the order of traversal
         # could be overridden in a subclass for a smarter protocol, e.g. try to empty out the tanks first.
-        for src, vol in sources.items():
-            used_amt = min(vol, remaining_amt)
+        for src, amt in sources.items():
+            used_amt = min(amt, remaining_amt)
             remaining_amt -= used_amt
             solution[src] = used_amt        
-        return solution
+        #return solution # actual solution, uncomment when implemented properly
+        return comestibles.CoffeeBeans(amount=needed_amt) # also magic!
         
     def pick_grinder(self, grinders, *args, **kwargs):
         """Handles selecting which grinder to use - and reconfiguring it if needed.

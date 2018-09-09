@@ -10,8 +10,8 @@ class Grinder(object):
     def __init__(self, *args, **kwargs):
         pass
         
-    def grind(self, items, *args, **kwargs):
-        grounded = dict(items)
+    def grind(self, items=None, *args, **kwargs):
+        grounded = dict(items or {})
         grounds = {}
         
         while grounded:

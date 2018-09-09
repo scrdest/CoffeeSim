@@ -37,19 +37,26 @@ class WaterSupplyTest(unittest.TestCase):
 class BeanSupplyTest(unittest.TestCase):
 
     def test_container(self):
-        pass
+        container = bean_supply.Container()
     
     
 class GrinderTest(unittest.TestCase):
 
     def test_base_grinder(self):
-        pass
+        grinder = grinders.Grinder()
+        empty_run = grinder.grind(items=None)
+        self.assertFalse(empty_run)
+        print("\nGrinder behavior as expected...")
     
     
 class HeaterTest(unittest.TestCase):
 
     def test_base_heater(self):
-        pass
+        heater = heaters.Heater()
+        empty_run = heater.heat(items=None)
+        self.assertFalse(empty_run)
+        print("\nHeater behavior as expected...")
+        
     
     
         

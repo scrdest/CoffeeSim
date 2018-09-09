@@ -47,6 +47,7 @@ class GenericCoffeemakerIntegrationTest(unittest.TestCase):
         self.assertIsNone(self.machine.brew())
     
     def test_brewing(self):
+        """Verifies the powered machine makes coffee out of the box (with default settings)."""
         self.machine.powered = True
         brew = self.machine.brew()
         self.assertIsNotNone(brew)
